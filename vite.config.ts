@@ -1,8 +1,5 @@
-/// <reference types="vitest" />
-
 import { dirname, relative } from 'path'
-import type { UserConfig } from 'vite'
-import { defineConfig } from 'vite'
+import { UserConfig, defineConfig } from 'vite'
 import Vue from '@vitejs/plugin-vue'
 import Icons from 'unplugin-icons/vite'
 import IconsResolver from 'unplugin-icons/resolver'
@@ -11,6 +8,7 @@ import AutoImport from 'unplugin-auto-import/vite'
 import WindiCSS from 'vite-plugin-windicss'
 import windiConfig from './windi.config'
 import { isDev, port, r } from './scripts/utils'
+import { MV3Hmr } from './vite-mv3-hmr'
 
 export const sharedConfig: UserConfig = {
   root: r('src'),
@@ -29,9 +27,7 @@ export const sharedConfig: UserConfig = {
       imports: [
         'vue',
         {
-          'webextension-polyfill': [
-            ['*', 'browser'],
-          ],
+          'webextension-polyfill': [['default', 'browser']],
         },
       ],
       dts: r('src/auto-imports.d.ts'),
@@ -41,7 +37,7 @@ export const sharedConfig: UserConfig = {
     Components({
       dirs: [r('src/components')],
       // generate `components.d.ts` for ts support with Volar
-      dts: r('src/components.d.ts'),
+      dts: true,
       resolvers: [
         // auto import icons
         IconsResolver({
@@ -59,19 +55,16 @@ export const sharedConfig: UserConfig = {
       enforce: 'post',
       apply: 'build',
       transformIndexHtml(html, { path }) {
-        return html.replace(/"\/assets\//g, `"${relative(dirname(path), '/assets')}/`)
+        return html.replace(
+          /"\/assets\//g,
+          `"${relative(dirname(path), '/assets')}/`
+        )
       },
     },
   ],
   optimizeDeps: {
-    include: [
-      'vue',
-      '@vueuse/core',
-      'webextension-polyfill',
-    ],
-    exclude: [
-      'vue-demi',
-    ],
+    include: ['vue', '@vueuse/core', 'webextension-polyfill'],
+    exclude: ['vue-demi'],
   },
 }
 
@@ -94,11 +87,11 @@ export default defineConfig(({ command }) => ({
     },
     rollupOptions: {
       input: {
-        background: r('src/background/index.html'),
         options: r('src/options/index.html'),
         popup: r('src/popup/index.html'),
       },
     },
+    minify: 'terser',
   },
   plugins: [
     ...sharedConfig.plugins!,
@@ -107,9 +100,9 @@ export default defineConfig(({ command }) => ({
     WindiCSS({
       config: windiConfig,
     }),
+    MV3Hmr(),
   ],
   test: {
     globals: true,
-    environment: 'jsdom',
   },
 }))

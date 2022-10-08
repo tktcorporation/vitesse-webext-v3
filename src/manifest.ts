@@ -4,16 +4,16 @@ import type PkgType from '../package.json'
 import { isDev, port, r } from '../scripts/utils'
 
 export async function getManifest() {
-  const pkg = await fs.readJSON(r('package.json')) as typeof PkgType
+  const pkg = (await fs.readJSON(r('package.json'))) as typeof PkgType
 
   // update this file to update this manifest.json
   // can also be conditional based on your need
   const manifest: Manifest.WebExtensionManifest = {
-    manifest_version: 2,
+    manifest_version: 3,
     name: pkg.displayName || pkg.name,
     version: pkg.version,
     description: pkg.description,
-    browser_action: {
+    action: {
       default_icon: './assets/icon-512.png',
       default_popup: './dist/popup/index.html',
     },
@@ -23,9 +23,9 @@ export async function getManifest() {
       chrome_style: false,
     },
     background: {
-      page: './dist/background/index.html',
-      persistent: false,
+      service_worker: './dist/background/index.mjs',
     },
+    host_permissions: ['*://*/*'],
     icons: {
       16: './assets/icon-512.png',
       48: './assets/icon-512.png',
